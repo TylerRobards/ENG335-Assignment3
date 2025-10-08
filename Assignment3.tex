@@ -23,14 +23,38 @@ Tyler Robards - 651790, Baley Eccles - 652137}\\
 \newpage
 
 \section{Introduction}
-
+This assignment applies a Genetic Algorithm (GA) to optimise the placement of an Emergency Response Unit (ERU) with a $7\times 7\:\text{km}$ city grid. Each grid sector represent the annual rate of emergency incidents, $\lambda$. The goal is to minimise the average weighted distance between the ERU and all city sectors, therefore reducing the average response time to emergencies.\\
+Two cases are analysed:
+\begin{enumerate}
+	\item [1)] Flat City - No obstacles in the city grid, the ERU can be placed anywhere.
+		\hfill
+	\item [2)] River City - A river divides the city at $x=5\:\text{km}$ with a single bridge at $(5.0,5.5)\:\text{km}$ forcing detours across the bridge.
+		\hfill	
+\end{enumerate}
+The Genetic Algorithm is developed in MATLAB to locate the global optimum ERU position, and is visualised through a progress plot. Simple testing of GA parameters and result visitation is implemented through an interactive GUI built with the MATLAB App Designer.
 \section{Domain Problem}
-%  #TODO: fix this shit it looks bad
-\begin{center}
-\begin{tabular}{|c|c|c|c|cR c|c|}
-\hline
-% top (north) row first
-3 & 4 & 1 & 2 & 1 & 3 & 8 \\ \hline
+This optimisation problem seeks to minimise total travel distance to a single ERU location.\\
+The specification defines the objective function as the weighted total emergency response distance,
+$$f(x_{eru},y_{eru})=\sum_{n=1}^{49}\lambda_n\sqrt{(x_n-x_{eru})^2+(y_n-y_{eru})^2}$$
+where,
+\begin{itemize}
+	\item $\lambda_n$ is the number of emergencies per year in sector $n$,
+	\item $(x_n,y_n)$ are the coordinates of the center of sector $n$, and
+	\item $(x_{eru},y_{eru})$ are the coordinates of the ERU location
+\end{itemize}
+The goal is to minimise the this sum, $f(x,y)$, since a smaller value means a shorter response time. However, most genetic algorithms are designed for maximisation problems. To use the GA for this task, the reciprocal of the objective function is used as the fitness function,
+$$f_{GA}(x,y)=\dfrac{1}{f(x,y)+\epsilon}$$
+where $\epsilon$ is a small constant to avoid division by zero.\\
+This allows the algorithm to maximise the fitness while minimising the original objective.\\
+\#TODO write about the city layouts
+\begin{table}[H]
+	\centering
+	\caption{Flat City}
+	\label{tab:Flay City}
+	\begin{tabular}{|c|c|c|c|c|c|c|}
+	\hline
+	% top (north) row first
+	3 & 4 & 1 & 2 & 1 & 3 & 8 \\ \hline
 2 & 1 & 3 & 1 & 3 & 9 & 7 \\ \hline
 5 & 1 & 2 & 1 & 4 & 9 & 8 \\ \hline
 4 & 2 & 1 & 2 & 5 & 9 & 9 \\ \hline
@@ -38,17 +62,46 @@ Tyler Robards - 651790, Baley Eccles - 652137}\\
 9 & 8 & 5 & 2 & 1 & 7 & 9 \\ \hline
 8 & 9 & 6 & 1 & 1 & 8 & 9 \\ \hline
 \end{tabular}
-\end{center}
+\end{table}
 \subsection{The Travelling Salesman Problem}
-
+The travelling salesman problem (TSP) asks the following question "Given a list of cities and the distances between each pair of cities, what is the shortest possible route that visits each city exactly once and returns to the origin city?" The TSP is a similar optimisation problem to that in this assignment, both aim to minimise the total travel distance, however this task has a single ERU location rather than a closed route. 
 \section{Genetic Algorithm Description}
+\#TODO\\
+
+\subsection{Fitness Evaluation}
+
+\subsection{Parameter Selection}
 
 \subsection{Algorithm Testing}
-
-\section{User's Guide}
-
+To test the genetic algorithm the GUI shown in figure \ref{fig:GUI} was developed. This allows the user to easily change the GA parameters and display the results. \\
+\#TODO More testing on the GA and write about it
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.9\columnwidth]{~/Pictures/2025-10-08-121357_hyprshot.png}
+	\caption{GUI}
+	\label{fig:GUI}
+\end{figure}
+\subsubsection{GUI User Guide}
+\textbf{Features}:
+\begin{itemize} 
+	\item Drop down selection to choose if the river is enabled
+	\item Editable fields for population, number of generations, Crossover and Mutation probabilities, elitism count and tournament size. 
+\end{itemize}
+\textbf{Steps}:
+\begin{enumerate}
+	\item [1)] Extract \texttt{Simulation Files.zip} and open \texttt{Main.m}
+		\hfill
+	\item [2)] Run \texttt{Main.m}. This will open the GUI
+		\hfill
+	\item [3)] Enter desired GA parameters
+		\hfill
+	\item [4)] Click \texttt{Run GA} to execute
+		\hfill
+	\item [5)] Results will be displayed in the bottom text areas. The plot progess plot will be displayed, showing the result from both the Genetic Algorithm (red circle) and Exhaustive Check (star)
+		\hfill
+\end{enumerate}
 \section{Conclusions}
-
+\#TODO
 \vfill
 \hrule
 \begin{center}

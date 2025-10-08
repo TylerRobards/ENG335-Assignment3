@@ -3,7 +3,7 @@
 % Baley Eccles - 652137
 
 %% INITIAL SETUP
-clear; clc; close all; rng(335); % Set a random seed for repeatability
+clc; close all; rng(335); % Set a random seed for repeatability
 % Setup Matrix (based on assignment spec)
 lambdaMatrix = [3, 4, 1, 2, 1, 3, 8;
                  2, 1, 3, 1, 3, 9, 7;
@@ -13,16 +13,15 @@ lambdaMatrix = [3, 4, 1, 2, 1, 3, 8;
                  9, 8, 5, 2, 1, 7, 9;
                  8, 9, 6, 1, 1, 8, 9];
 
-% Option Selector: 1 = no river; 2 = river at x=5
-whichPart = 2; 
-
 % GA Parameters
-popSize        = 5;
-numGenerations = 200;
-pCrossover     = 0.90;   % probability of crossover
-pMutation      = 0.15;   % per-individual mutation probability
-elitismCount   = 2;      % number of elites to carry over unchanged
-tournamentK    = 3;      % tournament size
+if ~exist('popSize','var'),        popSize = 4; end
+if ~exist('numGenerations','var'), numGenerations = 200; end
+if ~exist('pCrossover','var'),     pCrossover = 0.9; end
+if ~exist('pMutation','var'),      pMutation = 0.15; end
+if ~exist('elitismCount','var'),   elitismCount = 2; end
+if ~exist('tournamentK','var'),    tournamentK = 3; end
+if ~exist('whichPart','var'),      whichPart = 1; end
+whichPart=str2double(whichPart);
 showProgress   = true;   % live plot of best solution
 
 % Optional: run GA multiple times to check consistency
@@ -55,11 +54,15 @@ end
 [bestEx_ix, bestEx_iy, bestExFitness, exDistance] = exhaustiveSearch( ...
     xs, ys, sectorXY, lambdaVec, whichPart, riverX, bridgePt);
 
-fprintf('\nExhaustive optimum (Part %d):\n', whichPart);
-fprintf('  Sector index: ix=%d, iy=%d  (x=%.1f, y=%.1f km)\n', ...
-    bestEx_ix, bestEx_iy, xs(bestEx_ix), ys(bestEx_iy));
-fprintf('  Best fitness = %.6f  (weighted distance = %.6f km)\n', ...
-    bestExFitness, 1/bestExFitness);
+% === EXHAUSTIVE CHECK OUTPUT ===
+exMsg = sprintf([ ...
+    '\nExhaustive optimum (Part %d):\n' ...
+    '  Sector index: ix=%d, iy=%d  (x=%.1f, y=%.1f km)\n' ...
+    '  Best fitness = %.6f  (weighted distance = %.6f km)\n' ], ...
+    whichPart, bestEx_ix, bestEx_iy, xs(bestEx_ix), ys(bestEx_iy), bestExFitness, 1/bestExFitness);
+
+fprintf('%s', exMsg);   % keep your console print
+assignin('base','exMsg',exMsg);   % <-- expose to the app
 
 %% RUN THE GENETIC ALGORITHIM
 allBest   = zeros(numRuns, 2);
@@ -73,9 +76,14 @@ for r = 1:numRuns
     allBest(r,:) = [bestIx, bestIy];
     allFit(r)    = bestFit;
 
-    fprintf('\nGA Run %d Result (Part %d):\n', r, whichPart);
-    fprintf('  Best ix=%d, iy=%d (x=%.1f, y=%.1f km)\n', bestIx, bestIy, xs(bestIx), ys(bestIy));
-    fprintf('  Fitness = %.6f  (weighted distance = %.6f km)\n', bestFit, 1/bestFit);
+   gaMsg = sprintf([ ...
+    '\nGA Run %d Result (Part %d):\n' ...
+    '  Best ix=%d, iy=%d (x=%.1f, y=%.1f km)\n' ...
+    '  Fitness = %.6f  (weighted distance = %.6f km)\n' ], ...
+    r, whichPart, bestIx, bestIy, xs(bestIx), ys(bestIy), bestFit, 1/bestFit);
+
+fprintf('%s', gaMsg);
+assignin('base','gaMsg',gaMsg);   % <-- expose to the app
 
     % Compare to exhaustive optimum
     if bestFit < bestExFitness
