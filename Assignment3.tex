@@ -46,46 +46,86 @@ The goal is to minimise the this sum, $f(x,y)$, since a smaller value means a sh
 $$f_{GA}(x,y)=\dfrac{1}{f(x,y)+\epsilon}$$
 where $\epsilon$ is a small constant to avoid division by zero.\\
 This allows the algorithm to maximise the fitness while minimising the original objective.\\
-\#TODO write about the city layouts
-\begin{table}[H]
+
+This project employs two distinct city layouts. The first configuration, the Flat City (Figure \ref{fig:Flat City}), represents a simple environment without geographical barriers. The ERU can travel directly to all sectors in a straight line.\\
+\begin{figure}[H]
 	\centering
-	\caption{Flat City}
-	\label{tab:Flay City}
-	\begin{tabular}{|c|c|c|c|c|c|c|}
-	\hline
-	% top (north) row first
-	3 & 4 & 1 & 2 & 1 & 3 & 8 \\ \hline
-2 & 1 & 3 & 1 & 3 & 9 & 7 \\ \hline
-5 & 1 & 2 & 1 & 4 & 9 & 8 \\ \hline
-4 & 2 & 1 & 2 & 5 & 9 & 9 \\ \hline
-8 & 9 & 6 & 3 & 2 & 5 & 9 \\ \hline
-9 & 8 & 5 & 2 & 1 & 7 & 9 \\ \hline
-8 & 9 & 6 & 1 & 1 & 8 & 9 \\ \hline
-\end{tabular}
-\end{table}
+	\includegraphics[width=0.6\columnwidth]{2025-10-09-143207_hyprshot.png}
+	\caption{Flat City Grid}
+	\label{fig:Flat City}
+\end{figure}
+The second configuration, the River City (Figure \ref{fig:River City}), includes a realistic constraint, a river running through the city at $x=5$ and a bridge at $(x,y)=(5.0,5.5)$. When the ERU and the emergency are on opposite sides of the river the distance must be calculated differently, as the sum of the distance for the ERU to the bridge and the distance from the bridge to the relevant sector.
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.6\columnwidth]{2025-10-09-143716_hyprshot.png}
+	\caption{River City Grid}
+	\label{fig:River City}
+\end{figure}
+By comparing the Flat City and River City configurations the impact of realistic geographical constraints can be observed. 
 \subsection{The Travelling Salesman Problem}
 The travelling salesman problem (TSP) asks the following question "Given a list of cities and the distances between each pair of cities, what is the shortest possible route that visits each city exactly once and returns to the origin city?" The TSP is a similar optimisation problem to that in this assignment, both aim to minimise the total travel distance, however this task has a single ERU location rather than a closed route. 
 \section{Genetic Algorithm Description}
-\#TODO\\
+The Genetic Algorithm (GA) for this project is designed to find the best possible location for the Emergency Response Unit (ERU) within a $7\times 7\:\text{km}$ city grid. The objective is to minimise the total weighted distance between the ERU and all 49 city sectors, where each sector has a specific emergency rate. This ensures that areas with higher emergency rates have higher weighting on the final ERU location. Each possible ERU location is represented by integer coordinates corresponding to the center of each sector in the city. The algorithm begins by randomly generating an initial population of ERU positions, allowing it to explore the entire search space. This spread increase the chances of finding the global solution, rather than getting stuck in a local maximum.\\
 
-\subsection{Fitness Evaluation}
+Once the initial population is generated, each candidate is evaluated using the fitness function that measures how effective each candidate is at minimising emergency response distance to each city sector. 
+$$f(x,y)=\dfrac{1}{\sum_{n=1}^{49}\lambda_n\sqrt{(x_n-x_{eru})^2+(y_n-y_{eru})^2}}$$
+For sectors on the same side of the river as the ERU the direct euclidean distance is used, however sectors across the river must be calculated differently. The total distance will be the sum of two segments, from the ERU to the bridge at $(5.0,5.5)$ and the bridge to the relevant sector. These distances are multiplied by each sectors weighting, $\lambda_n$, producing a weighted total distance that represents the ERU's overall effectiveness at the current candidates position. As the GA is designed to maximise the fitness, rather than minimise it as needed for this task, the reciprocal of this weighted sum is used,  allowing the GA to maximise fitness as which corresponds to minimising distance.\\
 
-\subsection{Parameter Selection}
+The optimisation process then proceeds through several generations using biologically inspired operations, selection, crossover and mutations. During selection, the algorithm uses the tournament method, where small groups of candidates are randomly chosen and the one with the highest fitness becomes a parent. This ensures that the best solutions have a higher chance of reproducing whilst retaining genetic diversity. The crossover stage combines information form two parents to produce offspring, using a uniform crossover approach where each coordinate has an equal probability of being inherited from either parent. This allows good characteristics from different solutions to mix and form potentially stronger candidates. The mutation step introduces random changes by modifying one or both coordinates to a new grid location. This prevents stagnation and helps the GA escape local solutions. Elitism is also used to ensure that the best performing candidates from one generation are carried over, completely unchanged, to the next, preventing the loss of high quality solutions.\\
+
+To ensure the algorithm is performing well and to validate the final solution an exhaustive search is used alongside to GA. This brute force method calculates the fitness for all possible ERU locations and identifies the best solution. The results from the GA are compared to this exhaustive optimum to check the GA converges to the true global solution.
 
 \subsection{Algorithm Testing}
 To test the genetic algorithm the GUI shown in figure \ref{fig:GUI} was developed. This allows the user to easily change the GA parameters and display the results. \\
-\#TODO More testing on the GA and write about it
+\begin{table}[H]
+\centering
+\caption{GA Test Configurations}
+\label{tab:GA_tests}
+\renewcommand{\arraystretch}{1.2}
+\resizebox{0.9\columnwidth}{!}{
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|}
+\hline
+\textbf{Test Case} & \textbf{Population} & \textbf{Generations} & $\mathbf{p_c}$ & $\mathbf{p_m}$ & \textbf{Elitism} & \textbf{Tournament Size} & \textbf{Fitness} & \textbf{Solution Position}\\ \hline
+Test 1 & 5 & 50 & 0.90 & 0.15 & 1 & 2 & 0.001313 & (4.5,5.5) \\ \hline
+Test 2 & 10 & 75 & 0.85 & 0.25 & 1 & 3 & 0.001313 & (4.5,5.5) \\ \hline
+Test 3 & 8  & 100 & 0.80 & 0.50 & 0 & 2 & 0.001313 & (4.5,5.5) \\ \hline
+Test 4 & 12 & 100 & 0.90 & 0.05 & 3 & 4 & 0.001313 & (4.5,5.5) \\ \hline
+Test 5 & 15 & 100 & 0.90 & 0.20 & 2 & 3 & 0.001313 & (4.5,5.5) \\ \hline
+\end{tabular}
+}
+\end{table}
+To evaluate the performance and robustness of the system five tests were conducted using different GA parameters, shown in Table \ref{tab:GA_tests}. Despite significant variations in parameters all test successfully converged to the same solution at $(x,y)=(2.5,5.5)$, with a fitness value of $0.001313$. This result matches the exhaustive search solutions, confirming the reliability of the algorithm. The rapid convergence, typically within 50 generations, indicates the search space is relatively simple and that the fitness surface contains a singular optimal solution. Tests with lower mutation probabilities and higher elitism (Tests 1 and 4) converged slightly faster, suggesting a limited need for exploration once the population reaches the correct region. Configurations with higher mutation rates (Test 3) were slower to converge as they explored the region more, however they still settled to the same global solution. Overall, these results display that the GA implementation is both stable and efficient for this task, requiring minimal tuning to achieve consistent and accurate solutions.
+\subsection{Final Parameter Selection}
+Based on the testing conducted, a middle ground between Tests 1, 3 and 4 was selected. This balances speed and stability, whilst allowing the population to explore the region.
+\begin{table}[H]
+	\centering
+	\caption{Final Parameter Selection}
+	\label{tab:Final Parameter Selection}
+	\begin{tabular}{|l|l|l|}
+\hline
+\multicolumn{1}{|c|}{\textbf{Parameter}} & \multicolumn{1}{c|}{\textbf{Symbol}} & \multicolumn{1}{c|}{\textbf{Value}} \\ \hline
+Population Size & $N_p$ & 8 \\ \hline
+Generations & $N_g$ & 75 \\ \hline
+Crossover Probability & $p_c$ & 0.85 \\ \hline
+Mutation Probability & $p_m$ & 0.2 \\ \hline
+Elitism Count & - & 1 \\ \hline
+Tournament Size & $K$ & 2 \\ \hline
+\end{tabular}\end{table}
+
+
+\subsubsection{GUI User Guide}
 \begin{figure}[H]
 	\centering
 	\includegraphics[width=0.9\columnwidth]{~/Pictures/2025-10-08-121357_hyprshot.png}
 	\caption{GUI}
 	\label{fig:GUI}
 \end{figure}
-\subsubsection{GUI User Guide}
 \textbf{Features}:
 \begin{itemize} 
 	\item Drop down selection to choose if the river is enabled
-	\item Editable fields for population, number of generations, Crossover and Mutation probabilities, elitism count and tournament size. 
+	\item Editable fields for population, number of generations, crossover and mutation probabilities, elitism count and tournament size. 
+	\item Run GA button executes the algorithm with the current settings
+	\item Emergency rate heatmap, showing river/bridge, and markers for GA and exhaustive solutions 
 \end{itemize}
 \textbf{Steps}:
 \begin{enumerate}
@@ -101,7 +141,11 @@ To test the genetic algorithm the GUI shown in figure \ref{fig:GUI} was develope
 		\hfill
 \end{enumerate}
 \section{Conclusions}
-\#TODO
+This assignment successfully applied a Genetic Algorithm to optimise the placement of an Emergeny Response Unity within a simplified city grid. The algorithm was able to minimise the total weighted emergency distance for both city layouts, the Flat City and the River City. The algorithm consistently located the same optimal solution as the exhaustive check. This confirmed the algorithm implementation was accurate, efficient and well suited for this optimisation problem.\\
+
+Through parameter testing, the algorithm demonstrated reliable convergence behaviour across all configurations. Lower mutation rates accelerated convergence, while higher mutation rates promoted exploration at the cost of slower convergence. The final selected parameters (Table \ref{tab:Final Parameter Selection}) provided a balance between exploration and speed, achieving consistent and accurate results.\\
+
+Overall, the Genetic Algorithm proved to be an effective optimisation tool. It successfully modelled realistic urban challenges and provided insight into parameter tuning and geographical features influence over performance. The final MATLAB implementation and GUI also proved a useful platform for visualising behaviour and exploring different parameter configurations.
 \vfill
 \hrule
 \begin{center}
